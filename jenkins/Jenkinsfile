@@ -25,7 +25,7 @@ spec:
       git 'https://github.com/lbpage/jenkins-docker.git'
       container('docker') {
         withCredentials([file(credentialsId: 'gcr-access.json', variable: 'FILE')]) {
-        sh 'echo $FILE'
+        sh 'use $FILE'
         //sh "echo $ | docker login -u _json_key --password-stdin https://gcr.io/active-alchemy-214615"
         //sh "docker build -t gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID} ."
         //sh "docker push  gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}"
