@@ -24,7 +24,7 @@ spec:
     stage('Build Docker image') {
       git 'https://github.com/lbpage/jenkins-docker.git'
       container('docker') {
-        withCredentials([file(credentialsId: 'gcr-access.json', variable: 'FILE')]) {
+        withCredentials([file(credentialsId: 'gcr-access', variable: 'FILE')]) {
           dir('/tmp/secrets/')
             sh 'use $FILE'
         //sh "echo $ | docker login -u _json_key --password-stdin https://gcr.io/active-alchemy-214615"
