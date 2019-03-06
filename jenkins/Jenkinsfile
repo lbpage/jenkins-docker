@@ -24,7 +24,9 @@ spec:
     stage('Build Docker image') {
       git 'https://github.com/lbpage/jenkins-docker.git'
       container('docker') {
-        sh "docker build -t gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}"
+        sh "docker build -t ${image}"
+        sh "docker tag ${image}  gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}"
+        sh "docker push  gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}"
       }
     }
   }
