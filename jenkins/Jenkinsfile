@@ -24,12 +24,17 @@ spec:
     stage('Build Docker image') {
       git 'https://github.com/lbpage/jenkins-docker.git'
       container('docker') {
-        withCredentials([file(credentialsId: 'gcr-access', variable: 'FILE')]) {
-          sh "echo '$FILE' | docker login -u _json_key --password-stdin https://gcr.io/active-alchemy-214615"
-          sh "docker build -t gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID} ."
-          sh "docker push  gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}"       
-          }
+        //sh "docker build -t gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID} ."
+        app = docker.build("gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}")
         }
       }
+    stage('Push image') {
+      container('docker'){
+        docker.withRegistry('gcr.io/active-alchemy-214615', 'gcr:[elsen-master]') {
+          app.push("${env.BUILD_NUMBER}")
+          app.push("latest")
+        }
+      }
+    }
     }
   }
