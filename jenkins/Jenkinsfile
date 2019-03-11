@@ -32,9 +32,10 @@ spec:
         docker.withRegistry('gcr.io/active-alchemy-214615', 'gcr:[elsen-master]') {
           app.push("${env.BUILD_NUMBER}")
           app.push("latest")
+          }
         }
       }
     }
-    }
   }
+}
 // withCredentials([file(credentialsId: 'gcr-access', variable: 'FILE')])
