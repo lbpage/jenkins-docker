@@ -29,7 +29,7 @@ spec:
       }
     stage('Push image') {
       container('docker'){
-        docker.withRegistry('https://gcr.io/active-alchemy-214615', 'gcr:google-container-registry-project') {
+        docker.withRegistry('https://gcr.io/active-alchemy-214615', 'gcr:elsenregistry') {
           app.push("${env.BUILD_NUMBER}")
           app.push("latest")
           }
