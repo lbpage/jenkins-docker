@@ -1,41 +1,80 @@
 def label = "docker-${UUID.randomUUID().toString()}"
-
-podTemplate(label: label, yaml: """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: docker
-    image: docker:1.11
-    command: ['cat']
-    tty: true
-    volumeMounts:
-    - name: dockersock
-      mountPath: /var/run/docker.sock
-  volumes:
-  - name: dockersock
-    hostPath:
-      path: /var/run/docker.sock
-"""
-  ) {
+  
+podTemplate(label: label, containers: [
+  containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true)
+],
+volumes: [
+  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
+]) 
+  
+  {
 
   def image = "jenkins/jnlp-slave"
   node(label) {
-    stage('Build Docker image') {
-      git 'https://github.com/lbpage/jenkins-docker.git'
-      container('docker') {
-        //sh "docker build -t gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID} ."
-        app = docker.build("gcr.io/active-alchemy-214615/jenkins_test/${BUILD_ID}")
-      }
-    stage('Push image') {
-      container('docker'){
-        docker.withRegistry('https://gcr.io/active-alchemy-214615', 'gcr:elsenregistry') {
-          app.push("${env.BUILD_NUMBER}")
-          app.push("latest")
+      stage('kubectl'){
+        container('kubectl'){
+          withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBE')]){
+            sh "cp \$KUBE ."
+            sh "kubectl get all -n eikon --kubeconfig=kubeconfig"
           }
+          //   withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBE')]){
+          //   sh "cp \$KUBE ."
+          //   sh "kubectl get all"
+          // // //   sh "chmod 755 kubeconfig"
+          // // //   sh "chown -R 1000:1000 kubeconfig"
+          // //   sh "ls -al"
+          // //   sh "pwd"
+          // //   docker.image('bitnami/kubectl:latest').inside('-v "$(pwd)":/kube') { c ->
+          // //     sh 'ls -al'
+          // //   }
+          // }
         }
       }
-    }
   }
+ 
 }
 // withCredentials([file(credentialsId: 'gcr-access', variable: 'FILE')])
+//            container('docker'){
+// withKubeConfig([credentialsId: 'user1', serverUrl: 'https://35.199.2.241']) {
+//   sh 'kubectl apply -f my-kubernetes-directory'
+// }
+//sh 'docker run --rm -v "$(pwd)":/kube ubuntu ls -al /kube'
+//sh 'docker run --rm -v "$(pwd)":/kube -e KUBECONFIG=/kube/kubeconfig --name kubectl bitnami/kubectl:latest --kubeconfig=/kube/kubeconfig get all'
+//sh 'docker run --rm -v kubeconfg:/tmp ubuntu ls -al /tmp'
+//docker.image('bitnami/kubectl:latest').run('-v "$(pwd)":/kube')
+// // def userInput = true
+// // def didTimeout = false
+// // try {
+// //     timeout(time: 15, unit: 'SECONDS') { // change to a convenient timeout for you
+// //         userInput = input(
+// //         id: 'Proceed1', message: 'Was this successful?', parameters: [
+// //         [$class: 'BooleanParameterDefinition', defaultValue: true, description: '', name: 'Please confirm you agree with this']
+// //         ])
+// //     }
+// // } catch(err) { // timeout reached or input false
+// //     def user = err.getCauses()[0].getUser()
+// //     if('SYSTEM' == user.toString()) { // SYSTEM means timeout.
+// //         didTimeout = true
+// //     } else {
+// //         userInput = false
+// //         echo "Aborted by: [${user}]"
+// //     }
+// // }
+// //     if (didTimeout) {
+// //         // do something on timeout
+// //         echo "no input was received before timeout"
+// //     } else if (userInput == true) {
+// //         // do something
+// //         echo "this was successful"
+// //     } else {
+// //         // do something else
+// //         echo "this was not successful"
+// //         currentBuild.result = 'FAILURE'
+// //     } 
+//             // withKubeConfig([credentialsId: 'user1', serverUrl: 'https://api.k8s.my-company.com']) {
+//             //     sh 'kubectl apply -f my-kubernetes-directory'
+//             // }
+//           }
+//       }
