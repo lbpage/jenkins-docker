@@ -3,7 +3,8 @@ def label = "docker-${UUID.randomUUID().toString()}"
 podTemplate(label: label, containers: [
   containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
-  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true)
+  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'ssh', image: 'gotechnies/alpine-ssh:latest', command: 'cat', ttyEnabled: true)
 ],
 volumes: [
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
@@ -14,71 +15,13 @@ volumes: [
   def image = "jenkins/jnlp-slave"
   node(label) {
       stage('kubectl'){
-        container('kubectl'){
-          withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBE')]){
-            sh "cp \$KUBE ."
-            sh "kubectl get all -n eikon --kubeconfig=kubeconfig"
-          }
+        container('ssh'){
           withCredentials([sshUserPrivateKey(credentialsId: "gcp-cluster-ssh", keyFileVariable: 'keyfile')]) {
               sh "ssh -i ${keyfile} nix-store.nix-store.svc.cluster.local"
               sh "ls -al /nix"
           }   
-          //   withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBE')]){
-          //   sh "cp \$KUBE ."
-          //   sh "kubectl get all"
-          // // //   sh "chmod 755 kubeconfig"
-          // // //   sh "chown -R 1000:1000 kubeconfig"
-          // //   sh "ls -al"
-          // //   sh "pwd"
-          // //   docker.image('bitnami/kubectl:latest').inside('-v "$(pwd)":/kube') { c ->
-          // //     sh 'ls -al'
-          // //   }
-          // }
         }
       }
   }
  
 }
-// withCredentials([file(credentialsId: 'gcr-access', variable: 'FILE')])
-//            container('docker'){
-// withKubeConfig([credentialsId: 'user1', serverUrl: 'https://35.199.2.241']) {
-//   sh 'kubectl apply -f my-kubernetes-directory'
-// }
-//sh 'docker run --rm -v "$(pwd)":/kube ubuntu ls -al /kube'
-//sh 'docker run --rm -v "$(pwd)":/kube -e KUBECONFIG=/kube/kubeconfig --name kubectl bitnami/kubectl:latest --kubeconfig=/kube/kubeconfig get all'
-//sh 'docker run --rm -v kubeconfg:/tmp ubuntu ls -al /tmp'
-//docker.image('bitnami/kubectl:latest').run('-v "$(pwd)":/kube')
-// // def userInput = true
-// // def didTimeout = false
-// // try {
-// //     timeout(time: 15, unit: 'SECONDS') { // change to a convenient timeout for you
-// //         userInput = input(
-// //         id: 'Proceed1', message: 'Was this successful?', parameters: [
-// //         [$class: 'BooleanParameterDefinition', defaultValue: true, description: '', name: 'Please confirm you agree with this']
-// //         ])
-// //     }
-// // } catch(err) { // timeout reached or input false
-// //     def user = err.getCauses()[0].getUser()
-// //     if('SYSTEM' == user.toString()) { // SYSTEM means timeout.
-// //         didTimeout = true
-// //     } else {
-// //         userInput = false
-// //         echo "Aborted by: [${user}]"
-// //     }
-// // }
-// //     if (didTimeout) {
-// //         // do something on timeout
-// //         echo "no input was received before timeout"
-// //     } else if (userInput == true) {
-// //         // do something
-// //         echo "this was successful"
-// //     } else {
-// //         // do something else
-// //         echo "this was not successful"
-// //         currentBuild.result = 'FAILURE'
-// //     } 
-//             // withKubeConfig([credentialsId: 'user1', serverUrl: 'https://api.k8s.my-company.com']) {
-//             //     sh 'kubectl apply -f my-kubernetes-directory'
-//             // }
-//           }
-//       }
