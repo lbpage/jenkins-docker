@@ -19,6 +19,10 @@ volumes: [
             sh "cp \$KUBE ."
             sh "kubectl get all -n eikon --kubeconfig=kubeconfig"
           }
+          withCredentials([sshUserPrivateKey(credentialsId: "gcp-cluster-ssh", keyFileVariable: 'keyfile')]) {
+              sh "ssh -i ${keyfile} nix-store.nix-store.svc.cluster.local"
+              sh "ls -al /nix"
+          }   
           //   withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBE')]){
           //   sh "cp \$KUBE ."
           //   sh "kubectl get all"
